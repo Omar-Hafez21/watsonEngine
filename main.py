@@ -1,5 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, Response
 import pandas as pd
+from pydantic import BaseModel
+
+class Item(BaseModel):
+    distinct: str
 
 app = FastAPI()
 
@@ -15,7 +19,9 @@ async def say_hello(name: str):
 
 
 @app.post("/watson/test/")
-async def create_upload_file():
+async def create_upload_file(item: Item):
+    # print('hii')
+    # print(item.distinct)
     df = pd.read_csv("dataframe.csv")
     color_ls = df.Color
     type_ls = df.Type
@@ -46,12 +52,19 @@ async def create_upload_file():
 
     print(color_objects + type_objects)
 
+    if item.distinct == 'color':
+        response_object = color_objects
+    elif item.distinct == 'type':
+        response_object = type_objects
+    else:
+        response_object = type_objects + color_objects
+
     the_response = {
         "car_info": {
             "buttons": [
                 {
                     "description": "Which car color are you interested in?",
-                    "options": color_objects, #type_objects,
+                    "options": response_object,
                     "response_type": "option",
                     "title": "Car Color"
                 }
